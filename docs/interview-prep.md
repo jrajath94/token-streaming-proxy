@@ -74,7 +74,7 @@ Standard reverse proxies don't understand SSE semantics. Nginx buffers by defaul
 
 ### Q8: Explain your testing strategy.
 
-**A:** Unit tests for SSE parsing (edge cases: multiline, comments, split chunks), backpressure controller (watermark triggering, timeout, close), and data models. Integration-style tests with mock SSE streams through the full parser pipeline. 56 tests, 63% coverage. The gap is the HTTP layer (core.py proxy handler) which requires a running server to test properly.
+**A:** Three layers: (1) Unit tests for SSE parsing edge cases (multiline, comments, split chunks, field-without-colon), backpressure controller (watermark triggering, timeout, close), exception classes, and data models. (2) Integration-style tests with mock SSE streams through the full parser pipeline. (3) Proxy handler tests using mocked httpx clients to test non-SSE forwarding, SSE streaming with backpressure, error handling (timeout, connection refused, buffer overflow), and endpoint responses. Also CLI argument parsing tests. 108 tests, 92% coverage.
 
 ### Q9: What are the failure modes?
 
@@ -92,7 +92,7 @@ Standard reverse proxies don't understand SSE semantics. Nginx buffers by defaul
 | Token extraction        | 317K tokens/s | bench_core.py | Faster than any LLM generates |
 | Backpressure throughput | 1.5M events/s | bench_core.py | Buffer is not the bottleneck  |
 | Concurrent streams      | 99K events/s  | 50 streams    | Scales linearly               |
-| Test count              | 56            | pytest        | Solid coverage                |
+| Test count              | 108           | pytest        | 92% coverage                  |
 
 ## Career Narrative
 

@@ -79,7 +79,7 @@ client = openai.OpenAI(base_url="http://localhost:8080/v1")
 ## Testing
 
 ```bash
-make test    # 56 tests, 63% coverage
+make test    # 108 tests, 92% coverage
 make bench   # Performance benchmarks
 make lint    # Ruff + mypy
 ```
@@ -96,7 +96,7 @@ token-streaming-proxy/
 │   ├── utils.py         # Mock streams, token extraction
 │   ├── cli.py           # CLI entry point
 │   └── exceptions.py    # Custom error types
-├── tests/               # 56 tests
+├── tests/               # 108 tests
 ├── benchmarks/           # Throughput benchmarks
 ├── examples/             # Quickstart demo
 └── docs/                 # Architecture + interview prep

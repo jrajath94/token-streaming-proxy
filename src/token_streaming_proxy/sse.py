@@ -7,8 +7,9 @@ from LLM APIs. Handles multi-line data fields, event types, and the
 
 from __future__ import annotations
 
+import contextlib
 import logging
-from typing import AsyncIterator, List, Optional
+from collections.abc import AsyncIterator
 
 from token_streaming_proxy.models import SSEEvent
 
@@ -19,7 +20,7 @@ SSE_LINE_SEP = b"\n"
 SSE_EVENT_SEP = b"\n\n"
 
 
-def parse_sse_event(raw: bytes) -> Optional[SSEEvent]:
+def parse_sse_event(raw: bytes) -> SSEEvent | None:
     """Parse a single SSE event from raw bytes.
 
     Handles the SSE wire format:
@@ -40,9 +41,9 @@ def parse_sse_event(raw: bytes) -> Optional[SSEEvent]:
     lines = raw.decode("utf-8", errors="replace").split("\n")
 
     event_type = "message"
-    data_lines: List[str] = []
-    event_id: Optional[str] = None
-    retry: Optional[int] = None
+    data_lines: list[str] = []
+    event_id: str | None = None
+    retry: int | None = None
 
     for line in lines:
         if not line or line.isspace():
@@ -68,10 +69,8 @@ def parse_sse_event(raw: bytes) -> Optional[SSEEvent]:
         elif field == "id":
             event_id = value if value else None
         elif field == "retry":
-            try:
+            with contextlib.suppress(ValueError):
                 retry = int(value)
-            except ValueError:
-                pass
 
     if not data_lines:
         return None

@@ -5,11 +5,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import List
 
 from token_streaming_proxy.backpressure import BackpressureController
 from token_streaming_proxy.models import SSEEvent
-from token_streaming_proxy.sse import iter_sse_events, parse_sse_event
+from token_streaming_proxy.sse import parse_sse_event
 from token_streaming_proxy.utils import create_mock_sse_stream, extract_token_from_sse
 
 logging.basicConfig(

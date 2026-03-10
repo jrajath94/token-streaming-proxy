@@ -13,12 +13,10 @@ import logging
 import time
 
 from token_streaming_proxy.backpressure import BackpressureController
-from token_streaming_proxy.models import SSEEvent, StreamMetrics
-from token_streaming_proxy.sse import iter_sse_events, parse_sse_event
+from token_streaming_proxy.models import StreamMetrics
 from token_streaming_proxy.utils import (
     create_mock_sse_stream,
     extract_token_from_sse,
-    simulate_sse_stream,
 )
 
 logging.basicConfig(
@@ -119,7 +117,7 @@ async def demo_streaming_metrics() -> None:
     tokens = ["Hello", " ", "world", "!"]
     events = create_mock_sse_stream(tokens)
 
-    start = time.monotonic()
+    time.monotonic()
     for i, event in enumerate(events):
         if i == 0:
             metrics.first_byte_time = time.monotonic()

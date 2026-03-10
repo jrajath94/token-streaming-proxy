@@ -6,7 +6,6 @@ import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -62,10 +61,10 @@ class ProxyConfig:
     heartbeat_interval: float = DEFAULT_HEARTBEAT_INTERVAL
     max_buffer_size: int = DEFAULT_MAX_BUFFER_SIZE
     max_connections: int = DEFAULT_MAX_CONNECTIONS
-    strip_headers: List[str] = field(
+    strip_headers: list[str] = field(
         default_factory=lambda: ["server", "x-request-id"]
     )
-    add_headers: Dict[str, str] = field(
+    add_headers: dict[str, str] = field(
         default_factory=lambda: {
             "x-accel-buffering": "no",
             "cache-control": "no-cache, no-transform",
@@ -87,8 +86,8 @@ class SSEEvent:
 
     data: str
     event: str = "message"
-    id: Optional[str] = None
-    retry: Optional[int] = None
+    id: str | None = None
+    retry: int | None = None
     raw: bytes = b""
 
     @property
@@ -146,7 +145,7 @@ class StreamMetrics:
     backpressure_count: int = 0
     heartbeats_sent: int = 0
     state: StreamState = StreamState.CONNECTING
-    error: Optional[str] = None
+    error: str | None = None
 
     @property
     def ttfb_ms(self) -> float:
@@ -169,7 +168,7 @@ class StreamMetrics:
             return 0.0
         return self.bytes_sent / duration_s
 
-    def complete(self, error: Optional[str] = None) -> None:
+    def complete(self, error: str | None = None) -> None:
         """Mark this stream as completed.
 
         Args:

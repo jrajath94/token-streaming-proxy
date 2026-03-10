@@ -10,7 +10,6 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections import deque
-from typing import Optional
 
 from token_streaming_proxy.models import SSEEvent
 
@@ -119,7 +118,7 @@ class BackpressureController:
 
         return True
 
-    async def pull(self, timeout: Optional[float] = None) -> Optional[SSEEvent]:
+    async def pull(self, timeout: float | None = None) -> SSEEvent | None:
         """Pull the next event from the buffer for the client.
 
         Blocks until an event is available or timeout expires.

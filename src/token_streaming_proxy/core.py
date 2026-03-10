@@ -8,10 +8,11 @@ Never buffers the full response -- tokens flow through as they arrive.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import time
 import uuid
-from typing import Any, Dict, Optional
+from typing import Any
 
 import httpx
 from starlette.applications import Starlette
@@ -33,7 +34,6 @@ from token_streaming_proxy.models import (
 )
 from token_streaming_proxy.sse import (
     encode_heartbeat_comment,
-    iter_sse_events,
     parse_sse_event,
 )
 
@@ -65,7 +65,7 @@ class StreamingProxy:
         state: Current proxy state.
     """
 
-    def __init__(self, config: Optional[ProxyConfig] = None) -> None:
+    def __init__(self, config: ProxyConfig | None = None) -> None:
         """Initialize the streaming proxy.
 
         Args:
@@ -74,8 +74,8 @@ class StreamingProxy:
         self.config = config or ProxyConfig()
         self.stats = ProxyStats()
         self.state = ProxyState.STOPPED
-        self._active_streams: Dict[str, StreamMetrics] = {}
-        self._client: Optional[httpx.AsyncClient] = None
+        self._active_streams: dict[str, StreamMetrics] = {}
+        self._client: httpx.AsyncClient | None = None
 
     async def _get_client(self) -> httpx.AsyncClient:
         """Get or create the upstream HTTP client.
@@ -112,8 +112,8 @@ class StreamingProxy:
         return f"{base}{path}"
 
     def _filter_request_headers(
-        self, headers: Dict[str, str]
-    ) -> Dict[str, str]:
+        self, headers: dict[str, str]
+    ) -> dict[str, str]:
         """Remove hop-by-hop and proxy headers from request.
 
         Args:
@@ -130,7 +130,7 @@ class StreamingProxy:
 
     def _build_response_headers(
         self, upstream_headers: httpx.Headers
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Build response headers for the client.
 
         Strips hop-by-hop headers, adds streaming-friendly headers,
@@ -221,10 +221,10 @@ class StreamingProxy:
                 params=dict(request.query_params),
             )
             upstream_resp = await client.send(upstream_req, stream=True)
-        except httpx.ConnectTimeout:
-            raise UpstreamTimeoutError(upstream_url, self.config.connect_timeout)
+        except httpx.ConnectTimeout as exc:
+            raise UpstreamTimeoutError(upstream_url, self.config.connect_timeout) from exc
         except httpx.ConnectError as exc:
-            raise UpstreamConnectionError(upstream_url, str(exc))
+            raise UpstreamConnectionError(upstream_url, str(exc)) from exc
 
         content_type = upstream_resp.headers.get("content-type", "")
         is_sse = "text/event-stream" in content_type
@@ -301,10 +301,8 @@ class StreamingProxy:
                 controller.close()
                 if not reader_task.done():
                     reader_task.cancel()
-                    try:
+                    with contextlib.suppress(asyncio.CancelledError):
                         await reader_task
-                    except asyncio.CancelledError:
-                        pass
                 if metrics.state not in (
                     StreamState.COMPLETED, StreamState.ERRORED
                 ):

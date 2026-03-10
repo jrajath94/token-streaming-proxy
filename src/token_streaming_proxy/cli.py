@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-import sys
-from typing import List, Optional
 
 import uvicorn
 
@@ -15,7 +13,7 @@ from token_streaming_proxy.models import ProxyConfig
 logger = logging.getLogger(__name__)
 
 
-def main(argv: Optional[List[str]] = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     """Main CLI entry point.
 
     Args:

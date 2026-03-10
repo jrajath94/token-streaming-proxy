@@ -5,8 +5,8 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import time
-from typing import Any, AsyncIterator, Dict, List, Optional
+from collections.abc import AsyncIterator
+from typing import Any
 
 from token_streaming_proxy.models import SSEEvent
 
@@ -14,10 +14,10 @@ logger = logging.getLogger(__name__)
 
 
 def create_mock_sse_stream(
-    tokens: List[str],
+    tokens: list[str],
     delay_ms: float = 50.0,
     model: str = "mock-model",
-) -> List[SSEEvent]:
+) -> list[SSEEvent]:
     """Create a list of mock SSE events simulating an LLM response.
 
     Useful for testing without an actual LLM API.
@@ -56,7 +56,7 @@ def create_mock_sse_stream(
 
 
 async def simulate_sse_stream(
-    events: List[SSEEvent],
+    events: list[SSEEvent],
     delay_ms: float = 50.0,
 ) -> AsyncIterator[bytes]:
     """Simulate an upstream SSE byte stream with delays.
@@ -74,7 +74,7 @@ async def simulate_sse_stream(
 
 
 def format_stats_table(
-    stats: Dict[str, Any],
+    stats: dict[str, Any],
     title: str = "Proxy Statistics",
 ) -> str:
     """Format statistics as an ASCII table.
@@ -101,7 +101,7 @@ def format_stats_table(
     return "\n".join(lines)
 
 
-def extract_token_from_sse(event: SSEEvent) -> Optional[str]:
+def extract_token_from_sse(event: SSEEvent) -> str | None:
     """Extract the text token from an OpenAI-format SSE event.
 
     Handles both chat completions (delta.content) and completions

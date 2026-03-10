@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
-from typing import AsyncIterator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -18,7 +16,6 @@ from token_streaming_proxy.exceptions import (
 from token_streaming_proxy.models import (
     ProxyConfig,
     ProxyState,
-    SSEEvent,
     StreamMetrics,
     StreamState,
 )

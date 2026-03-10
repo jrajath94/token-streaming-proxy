@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import AsyncIterator, List
+from collections.abc import AsyncIterator
 
 import pytest
 
@@ -12,8 +12,6 @@ from token_streaming_proxy.core import StreamingProxy
 from token_streaming_proxy.models import (
     ProxyConfig,
     SSEEvent,
-    StreamMetrics,
-    StreamState,
 )
 from token_streaming_proxy.sse import (
     encode_heartbeat_comment,
@@ -23,7 +21,6 @@ from token_streaming_proxy.sse import (
 from token_streaming_proxy.utils import (
     create_mock_sse_stream,
     extract_token_from_sse,
-    simulate_sse_stream,
 )
 
 

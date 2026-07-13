@@ -14,7 +14,7 @@ The root cause: standard proxies don't understand SSE. nginx buffers the entire 
 
 The correct approach is a proxy that understands the SSE protocol: read from upstream line-by-line, detect event boundaries (double newline), and forward complete events immediately. Beyond parsing, there's the backpressure problem: when a client on a slow mobile connection can't consume tokens as fast as the LLM generates them, what happens? Without backpressure, the proxy buffers everything locally -- consuming memory and defeating the purpose of streaming. With proper backpressure, you slow the upstream read, which propagates through TCP flow control all the way back to the LLM, which naturally pauses generation.
 
-I built this proxy because the 27x difference in TTFT (45ms vs 1,200ms) between an SSE-aware proxy and nginx is the difference between "this feels responsive" and "this feels laggy" for real-time chat.
+I built this proxy because the latency difference between an SSE-aware proxy and standard buffering proxies (nginx, HAProxy, API gateways) is significant for real-time chat -- the difference between "this feels responsive" and "this feels laggy".
 
 ## What This Project Does
 
@@ -64,41 +64,6 @@ token-proxy --upstream http://localhost:11434 --port 8080
 import openai
 client = openai.OpenAI(base_url="http://localhost:8080/v1")
 ```
-
-## Key Results
-
-### Proxy vs nginx (1,000 concurrent streaming clients)
-
-| Metric                    | token-streaming-proxy | nginx (proxy_buffering off) |
-| ------------------------- | --------------------- | --------------------------- |
-| Throughput (events/sec)   | 525,086               | 89,342                      |
-| Time-to-first-token (p99) | 45ms                  | 1,200ms                     |
-| Memory usage              | 220MB                 | 3.2GB                       |
-| Per-client latency jitter | Low (backpressure)    | High (buffering)            |
-
-### Scaling Characteristics
-
-| Concurrent Clients | Throughput (events/sec) | p50 TTFT (ms) | p99 TTFT (ms) | Memory (MB) |
-| ------------------ | ----------------------- | ------------- | ------------- | ----------- |
-| 100                | 52,400                  | 12            | 28            | 85          |
-| 500                | 261,000                 | 15            | 38            | 150         |
-| 1,000              | 525,086                 | 18            | 45            | 220         |
-| 2,000              | 1,038,000               | 22            | 62            | 380         |
-| 5,000              | 2,480,000               | 35            | 110           | 840         |
-| 10,000             | 4,620,000               | 58            | 220           | 1,600       |
-
-Throughput scales nearly linearly up to 5,000 clients. Beyond that, Python's GIL starts to become a factor (JSON parsing for metrics collection requires CPU time despite asyncio being single-threaded). For production above 5,000 concurrent streams, run multiple proxy processes behind a TCP load balancer.
-
-### Component Benchmarks
-
-| Metric                 | Value              | Conditions                      |
-| ---------------------- | ------------------ | ------------------------------- |
-| SSE parsing throughput | 525,086 events/s   | 100 tokens/event, single thread |
-| SSE parsing bandwidth  | 91.47 MB/s         | Raw byte throughput             |
-| Token extraction       | 317,493 tokens/s   | OpenAI chat format              |
-| Backpressure push      | 1,534,272 events/s | No contention                   |
-| Backpressure pull      | 1,404,289 events/s | No contention                   |
-| Concurrent streams     | 99,040 events/s    | 50 streams, 100 events each     |
 
 ## Design Decisions
 
